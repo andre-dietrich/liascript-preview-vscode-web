@@ -8,7 +8,7 @@
 		"url": "https://github.com/andre-dietrich/liascript-preview-vscode-web.git"
 	},
 	"icon": "icon.png",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"engines": {
 		"vscode": "^1.72.0"
 	},
@@ -39,8 +39,8 @@
 		"keybindings": [
 			{
 				"command": "liascript-preview-web.reload",
-				"key": "alt+f5",
-				"mac": "alt+f5"
+				"key": "Ctrl+S",
+				"mac": "Ctrl+S"
 			},
 			{
 			  	"command": "liascript-preview-web.toggle",

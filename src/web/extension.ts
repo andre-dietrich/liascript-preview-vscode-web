@@ -18,11 +18,13 @@ function compile(document: vscode.TextDocument) {
   }
 }
 
+/*
 vscode.workspace.onDidSaveTextDocument((document: vscode.TextDocument) => {
   if (document && !preview[document.fileName].jit) {
     compile(document)
   }
 })
+*/
 
 vscode.workspace.onDidChangeTextDocument((event) => {
   if (

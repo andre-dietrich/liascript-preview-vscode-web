@@ -9,8 +9,8 @@ After installing press <kbd>F1</kbd> to open the fuzzy search and type "liascrip
 
 * __LiaScript: Toggle Preview [<kbd>Alt</kbd> <kbd>L</kbd>]__
 
-  This will open a panel on the right side (or close it), which will be updated whenever the Markdown document is stored.
-  That means, if autosaving is activated, the document will be updated every time this happens or if you manually store the document via [<kbd>Ctrl</kbd> <kbd>S</kbd>]. 
+  This will open a panel on the right side (or close it).
+  The preview will be updated only with manual intervention, when you select the option "Reload Preview" or hit the keyboard short-cut [<kbd>Ctrl</kbd> <kbd>S</kbd>].
 
 * __LiaScript: Toggle Preview in JIT mode [<kbd>Shift</kbd> <kbd>Alt</kbd> <kbd>L</kbd>]__
 
@@ -18,12 +18,21 @@ After installing press <kbd>F1</kbd> to open the fuzzy search and type "liascrip
   This results in optimized update times, especially for large documents, but it also may result in glitches, when state changes of quizzes, code, etc. might be involved.
   If this happens, you simply have to reload the Preview, which will result in an entire re-interpretation of the entire document.
 
-* __LiaScript: Reload Preview [<kbd>Alt</kbd> <kbd>F5</kbd>]__
+* __LiaScript: Reload Preview [<kbd>Ctrl</kbd> <kbd>S</kbd>]__
 
   Reload the entire document, all states are reset.
 
-
 As an alternative you can also use the keyboard shortcuts directly.
+
+
+## Navigation
+
+__Preview to Editor: __
+Double-click onto a an element within the preview and the cursor position within the editor will jump to the associated line.
+
+__Editor to Preview:__
+When you hit <kbd>Ctrl</kbd> and click onto an text element within the editor, the preview will switch to the associated slide.
+
 
 ## Shortcomings
 
