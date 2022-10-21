@@ -26,6 +26,10 @@ vscode.workspace.onDidSaveTextDocument((document: vscode.TextDocument) => {
 })
 */
 
+function linkClicked(url: string) {
+  vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(url))
+}
+
 vscode.workspace.onDidChangeTextDocument((event) => {
   if (
     event.document &&
@@ -125,6 +129,11 @@ function createPreview(
             } catch (e) {
               console.warn('eval Error:', e)
             }
+            break
+          }
+
+          case 'link': {
+            linkClicked(message.param)
             break
           }
           default: {
@@ -228,10 +237,17 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
         case "gotoLine":
           sendToLia("goto", event.data.param)
           break
+        case "link":
+          publish("link", event.data.param)
+          break;
         case "eval":
           publish("eval", event.data.param)
           break
+        case "lia-ready":
+          init()
+          break;
 				default:
+          console.warn("unknown command:", event.data)
 					break;
 			}
 		  }, false);
@@ -245,11 +261,26 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
 		  const iframe = document.getElementById("lia")
 		  
 		  if (iframe) {
-			lia = iframe.contentWindow || iframe.contentDocument;
+			  lia = iframe.contentWindow || iframe.contentDocument;
 
-			sendToLia("eval", \`window.LIA.lineGoto = (line) => { parent.postMessage({cmd: 'lineGoto', param: line}, "*") }\`)
+			  sendToLia("eval", \`
+          window.LIA.lineGoto = (line) => {
+            parent.postMessage({cmd: 'lineGoto', param: line}, "*")
+          }
 
-			publish("ready", true)
+          window.LIA.onReady = undefined
+          
+          document.body.onclick = (e) => {
+            e = e.srcElement || e.target;
+            const parentNode = e.parentNode
+
+            if (parentNode && parentNode.tagName === "A" && parentNode.target === "_blank") {
+              parent.postMessage({cmd: 'link', param: parentNode.href}, "*")
+            }
+          }
+        \`)
+
+			  publish("ready", true)
 		  }
 		}
 	
