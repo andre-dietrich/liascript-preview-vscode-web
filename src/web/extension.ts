@@ -293,8 +293,7 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
 			allow="clipboard-read; clipboard-write;"
 			class="webview ready"
 			src="${liascriptPath}?#1"
-			style="width: 100%; height: 100%; border: 0px"
-			onload="init(this)">
+			style="width: 100%; height: 100%; border: 0px">
 		</iframe>
 	  </body>
 	  </html>`
