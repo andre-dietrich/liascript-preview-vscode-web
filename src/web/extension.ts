@@ -272,22 +272,6 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
 			}
 		}
 
-    
-    function createBlob(tag, url, image) {
-      const reader = new FileReader();
-      reader.addEventListener(
-        'load',
-        () => {
-          const data = reader.result;
-          sendToLia("inject", {tag, url, data})
-        },
-        false
-      );
-      if (image) {
-        reader.readAsDataURL(image);
-      }
-   }
-
 		window.addEventListener("message", (event) => {
 			switch (event.data.cmd) {
 				case "jit":
@@ -317,7 +301,7 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
         case "media.load.2":
           fetch(event.data.param.intern)
             .then((response) => response.blob())
-            .then((blob) => { createBlob(event.data.param.tag, event.data.param.origin, blob) })
+            .then((blob) => { sendToLia("inject", {tag: event.data.param.tag, src: event.data.param.origin, data: blob}) })
             .catch((e) => { console.warn("loading image failed", e) })
           break
 				default:
@@ -338,6 +322,8 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
 			  lia = iframe.contentWindow || iframe.contentDocument;
 
 			  sendToLia("eval", \`
+          var blob = {};
+
           window.LIA.lineGoto = (line) => {
             parent.postMessage({cmd: 'lineGoto', param: line}, "*")
           }
@@ -345,7 +331,18 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
           window.LIA.onReady = undefined
 
           window.injectHandler = function (param) {
-            const src = window.location.origin + param.url
+            let url
+            if (blob[param.src]) {
+              url = blob[param.src]
+            }
+            else if (param.data) {
+              url = URL.createObjectURL(param.data)
+              blob[param.src] = url
+            } else {
+              return
+            }
+
+            const src = window.location.origin + param.src
           
             switch (param.tag) {
               case "img": {
@@ -355,11 +352,11 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
                   let image = images[i]
           
                   if (image.src == src) {
-                    image.src = param.data
+                    image.src = url
           
                     if (image.onclick) {
                       image.onclick = function () {
-                        window.LIA.img.click(param.data)
+                        window.LIA.img.click(url)
                       }
                     }
                     
@@ -377,7 +374,7 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
                 for (let i = 0; i < nodes.length; i++) {
                   let elem = nodes[i]
                   if (elem.src == src) {
-                    elem.src = param.data
+                    elem.src = url
                     elem.removeAttribute("onerror")
                     
                     const parent = elem.parentNode
@@ -394,21 +391,15 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
           
               case "video": {
                 const nodes = document.querySelectorAll('source')
-          
                 for (let i = 0; i < nodes.length; i++) {
                   let elem = nodes[i]
-                  if (elem.src == src) {
-                    elem.src = param.data
-                    elem.removeAttribute("onerror")
-                    
+                  if (elem.src == src) {                  
                     const parent = elem.parentNode
-                    // this forces the player to reload
-                    parent.innerHTML = elem.outerHTML
-                    
-                    setTimeout(function() {
+                    parent.src = url
+                    parent.load()
+                    parent.onloadeddata = function() {
                       parent.play()
-                    }, 1000)
-
+                    }
                     break
                   }
                 }
@@ -429,7 +420,12 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
           }
 
           window.LIA.fetchError = (tag, src) => {
-            parent.postMessage({cmd: 'media.load', param: {tag, src}}, "*")
+            if (blob[src]) {
+              window.injectHandler({tag, src})
+            } else {
+              parent.postMessage({cmd: 'media.load', param: {tag, src}}, "*")
+            }
+
           }
         \`)
 
