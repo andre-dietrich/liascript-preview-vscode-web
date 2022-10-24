@@ -159,12 +159,13 @@ function createPreview(
             editor.revealRange(range)
             break
           }
-          case 'img.load.1': {
+          case 'media.load.1': {
             webviewPanel.webview.postMessage({
-              cmd: 'img.load.2',
+              cmd: 'media.load.2',
               param: {
-                intern: transformSrc(message.param),
-                origin: message.param,
+                tag: message.param.tag,
+                intern: transformSrc(message.param.src),
+                origin: message.param.src,
               },
             })
             break
@@ -272,13 +273,13 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
 		}
 
     
-    function createImageFromBlob(url, image) {
+    function createBlob(tag, url, image) {
       const reader = new FileReader();
       reader.addEventListener(
         'load',
         () => {
-          const base64data = reader.result;
-          sendToLia("inject", {img: url, data: base64data})
+          const data = reader.result;
+          sendToLia("inject", {tag, url, data})
         },
         false
       );
@@ -310,13 +311,13 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
         case "lia-ready":
           init()
           break;
-        case "img.load":
-          publish("img.load.1", event.data.param)
+        case "media.load":
+          publish("media.load.1", event.data.param)
           break
-        case "img.load.2":
+        case "media.load.2":
           fetch(event.data.param.intern)
             .then((response) => response.blob())
-            .then((blob) => { createImageFromBlob(event.data.param.origin, blob) })
+            .then((blob) => { createBlob(event.data.param.tag, event.data.param.origin, blob) })
             .catch((e) => { console.warn("loading image failed", e) })
           break
 				default:
@@ -344,27 +345,80 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
           window.LIA.onReady = undefined
 
           window.injectHandler = function (param) {
-            if (param.img) {
-              const src = window.location.origin + param.img
-              const images = document.querySelectorAll('img,picture')
-        
-              for (let i = 0; i < images.length; i++) {
-                let image = images[i]
-        
-                if (image.src == src) {
-                  image.src = param.data
-        
-                  if (image.onclick) {
-                    image.onclick = function () {
-                      window.LIA.img.click(param.data)
+            const src = window.location.origin + param.url
+          
+            switch (param.tag) {
+              case "img": {
+                const images = document.querySelectorAll('img,picture')
+          
+                for (let i = 0; i < images.length; i++) {
+                  let image = images[i]
+          
+                  if (image.src == src) {
+                    image.src = param.data
+          
+                    if (image.onclick) {
+                      image.onclick = function () {
+                        window.LIA.img.click(param.data)
+                      }
                     }
+                    
+                    break
                   }
-                  break
                 }
+          
+                break
+              }
+            
+          
+              case "audio": {
+                const nodes = document.querySelectorAll('source')
+          
+                for (let i = 0; i < nodes.length; i++) {
+                  let elem = nodes[i]
+                  if (elem.src == src) {
+                    elem.src = param.data
+                    elem.removeAttribute("onerror")
+                    
+                    const parent = elem.parentNode
+                    // this forces the player to reload
+                    parent.innerHTML = elem.outerHTML
+                    parent.play()
+
+                    break
+                  }
+                }
+          
+                break
+              }
+          
+              case "video": {
+                const nodes = document.querySelectorAll('source')
+          
+                for (let i = 0; i < nodes.length; i++) {
+                  let elem = nodes[i]
+                  if (elem.src == src) {
+                    elem.src = param.data
+                    elem.removeAttribute("onerror")
+                    
+                    const parent = elem.parentNode
+                    // this forces the player to reload
+                    parent.innerHTML = elem.outerHTML
+                    
+                    setTimeout(function() {
+                      parent.play()
+                    }, 1000)
+
+                    break
+                  }
+                }
+          
+                break
               }
             }
           }
           
+            
           document.body.onclick = (e) => {
             e = e.srcElement || e.target;
             const parentNode = e.parentNode
@@ -374,8 +428,8 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
             }
           }
 
-          window.LIA.img.error = (src) => {
-            parent.postMessage({cmd: 'img.load', param: src}, "*")
+          window.LIA.fetchError = (tag, src) => {
+            parent.postMessage({cmd: 'media.load', param: {tag, src}}, "*")
           }
         \`)
 
