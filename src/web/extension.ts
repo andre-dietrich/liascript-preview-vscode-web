@@ -1,6 +1,7 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode'
+import { Utils } from 'vscode-uri'
 
 const preview: {
   [key: string]: {
@@ -75,6 +76,25 @@ function createPreview(
     return
   }
 
+  const liascriptPath = vscode.Uri.joinPath(
+    context.extensionUri,
+    'liascript',
+    'index.html'
+  )
+
+  const baseRoots: vscode.Uri[] = []
+  const folder = vscode.workspace.getWorkspaceFolder(editor.document.uri)
+  if (folder) {
+    const workspaceRoots = vscode.workspace.workspaceFolders?.map(
+      (folder) => folder.uri
+    )
+    if (workspaceRoots) {
+      baseRoots.push(...workspaceRoots)
+    }
+  } else {
+    baseRoots.push(Utils.dirname(editor.document.uri))
+  }
+
   const fileName = editor.document.fileName
   const fileEnding = fileName.split('.').slice(-1)[0]?.toLowerCase()
 
@@ -99,9 +119,25 @@ function createPreview(
       {
         enableScripts: true,
         retainContextWhenHidden: true,
-        //localResourceRoots: [vscode.workspace. editor.document.uri],
+        localResourceRoots: baseRoots,
       }
     )
+
+    function asWebviewUri(resource: vscode.Uri) {
+      return webviewPanel.webview.asWebviewUri(resource)
+    }
+
+    function transformSrc(src: string) {
+      let ret = ''
+      let uri = vscode.Uri.parse('markdown-link:' + src)
+      if (folder) {
+        uri = vscode.Uri.joinPath(folder.uri, uri.fsPath)
+        ret = asWebviewUri(uri).toString(true)
+      } else {
+        ret = uri.toString(true).replace(/^markdown-link:/, '')
+      }
+      return ret
+    }
 
     webviewPanel.onDidDispose(() => {
       delete preview[fileName]
@@ -121,6 +157,16 @@ function createPreview(
             const range = editor.document.lineAt(message.param).range
             editor.selection = new vscode.Selection(range.start, range.end)
             editor.revealRange(range)
+            break
+          }
+          case 'img.load.1': {
+            webviewPanel.webview.postMessage({
+              cmd: 'img.load.2',
+              param: {
+                intern: transformSrc(message.param),
+                origin: message.param,
+              },
+            })
             break
           }
           case 'eval': {
@@ -212,6 +258,8 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
 		<script>
 		const vscode = acquireVsCodeApi();
 
+    vscode
+
 		var lia;
 
 		function sendToLia(cmd, param) {
@@ -223,32 +271,57 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
 			}
 		}
 
+    
+    function createImageFromBlob(url, image) {
+      const reader = new FileReader();
+      reader.addEventListener(
+        'load',
+        () => {
+          const base64data = reader.result;
+          sendToLia("inject", {img: url, data: base64data})
+        },
+        false
+      );
+      if (image) {
+        reader.readAsDataURL(image);
+      }
+   }
+
 		window.addEventListener("message", (event) => {
 			switch (event.data.cmd) {
 				case "jit":
 					sendToLia("jit", event.data.param)
-					break;
+					break
 				case "compile":
 					sendToLia("compile", event.data.param)
-					break;
+					break
         case "lineGoto":
           publish("lineGoto", event.data.param)
-          break;
+          break
         case "gotoLine":
           sendToLia("goto", event.data.param)
           break
         case "link":
           publish("link", event.data.param)
-          break;
+          break
         case "eval":
           publish("eval", event.data.param)
           break
         case "lia-ready":
           init()
           break;
+        case "img.load":
+          publish("img.load.1", event.data.param)
+          break
+        case "img.load.2":
+          fetch(event.data.param.intern)
+            .then((response) => response.blob())
+            .then((blob) => { createImageFromBlob(event.data.param.origin, blob) })
+            .catch((e) => { console.warn("loading image failed", e) })
+          break
 				default:
           console.warn("unknown command:", event.data)
-					break;
+					break
 			}
 		  }, false);
 	
@@ -269,6 +342,28 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
           }
 
           window.LIA.onReady = undefined
+
+          window.injectHandler = function (param) {
+            if (param.img) {
+              const src = window.location.origin + param.img
+              const images = document.querySelectorAll('img,picture')
+        
+              for (let i = 0; i < images.length; i++) {
+                let image = images[i]
+        
+                if (image.src == src) {
+                  image.src = param.data
+        
+                  if (image.onclick) {
+                    image.onclick = function () {
+                      window.LIA.img.click(param.data)
+                    }
+                  }
+                  break
+                }
+              }
+            }
+          }
           
           document.body.onclick = (e) => {
             e = e.srcElement || e.target;
@@ -277,6 +372,10 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
             if (parentNode && parentNode.tagName === "A" && parentNode.target === "_blank") {
               parent.postMessage({cmd: 'link', param: parentNode.href}, "*")
             }
+          }
+
+          window.LIA.img.error = (src) => {
+            parent.postMessage({cmd: 'img.load', param: src}, "*")
           }
         \`)
 

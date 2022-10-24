@@ -1,6 +1,5 @@
 # liascript-preview-web
 
-
 This is a preview module for [LiaScript](https://LiaScript.github.io) courses developed in Markdown.
 
 ## Usage
@@ -33,27 +32,4 @@ Double-click onto a an element within the preview and the cursor position within
 __Editor to Preview:__
 When you hit <kbd>Ctrl</kbd> and click onto an text element within the editor, the preview will switch to the associated slide.
 
-
-## Shortcomings
-
-Multimedia content cannot be loaded directly from the editor at the moment.
-You have to commit them first to your repository and set a `base` in the following format.
-
-``` markdown
-<!--
-...
-base: https://raw.githubusercontent.com/USER/REPOSITORY/BRANCH/
-...
--->
-
-# Main Document
-```
-
-This means, the following README - URL:
-
-`https://github.com/LiaScript/docs/blob/master/README.md`
-
-has a raw-base of:
-
-`https://raw.githubusercontent.com/LiaScript/docs/master/`
 
