@@ -143,61 +143,63 @@ function createPreview(
       return ret
     }
 
-    webviewPanel.onDidDispose(() => {
-      delete preview[fileName]
-    })
+    if (!update) {
+      webviewPanel.onDidDispose(() => {
+        delete preview[fileName]
+      })
 
-    webviewPanel.webview.onDidReceiveMessage(
-      (message) => {
-        switch (message.cmd) {
-          case 'ready': {
-            console.warn('ready ... ')
-            webviewPanel.webview.postMessage({
-              cmd: 'compile',
-              param: editor.document.getText(),
-            })
-            break
-          }
-          case 'lineGoto': {
-            const range = editor.document.lineAt(message.param).range
-            editor.selection = new vscode.Selection(range.start, range.end)
-            editor.revealRange(range)
-            break
-          }
-          case 'media.load.1': {
-            webviewPanel.webview.postMessage({
-              cmd: 'media.load.2',
-              param: {
-                tag: message.param.tag,
-                intern: transformSrc(message.param.src),
-                origin: message.param.src,
-              },
-            })
-            break
-          }
-          case 'eval': {
-            try {
-              eval(message.param)
-            } catch (e) {
-              console.warn('eval Error:', e)
+      webviewPanel.webview.onDidReceiveMessage(
+        (message) => {
+          switch (message.cmd) {
+            case 'ready': {
+              console.warn('ready ... ')
+              webviewPanel.webview.postMessage({
+                cmd: 'compile',
+                param: editor.document.getText(),
+              })
+              break
             }
-            break
+            case 'lineGoto': {
+              const range = editor.document.lineAt(message.param).range
+              editor.selection = new vscode.Selection(range.start, range.end)
+              editor.revealRange(range)
+              break
+            }
+            case 'media.load.1': {
+              webviewPanel.webview.postMessage({
+                cmd: 'media.load.2',
+                param: {
+                  tag: message.param.tag,
+                  intern: transformSrc(message.param.src),
+                  origin: message.param.src,
+                },
+              })
+              break
+            }
+            case 'eval': {
+              try {
+                eval(message.param)
+              } catch (e) {
+                console.warn('eval Error:', e)
+              }
+              break
+            }
+
+            case 'link': {
+              linkClicked(message.param)
+              break
+            }
+            default: {
+              console.warn('liascript-preview: unknown message ->', message)
+            }
           }
 
-          case 'link': {
-            linkClicked(message.param)
-            break
-          }
-          default: {
-            console.warn('liascript-preview: unknown message ->', message)
-          }
-        }
-
-        return
-      },
-      undefined,
-      context.subscriptions
-    )
+          return
+        },
+        undefined,
+        context.subscriptions
+      )
+    }
 
     setHtmlContent(context.extensionUri, webviewPanel.webview)
 
@@ -322,7 +324,7 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
           fetch(event.data.param.intern)
             .then((response) => response.blob())
             .then((blob) => { sendToLia("inject", {tag: event.data.param.tag, src: event.data.param.origin, data: blob}) })
-            .catch((e) => { console.warn("loading image failed", e) })
+            .catch((e) => { console.warn("loading content failed", e) })
           break
 				default:
           console.warn("unknown command:", event.data)
@@ -426,6 +428,27 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
           
                 break
               }
+
+              case "script": {
+                const tag = document.createElement('script')
+                tag.src = url
+                document.head.appendChild(tag)
+                
+                break
+              }
+
+              case "link": {
+                const tag = document.createElement('link')
+                tag.href = url
+                tag.rel = 'stylesheet'
+                document.head.appendChild(tag)
+                
+                break
+              }
+
+              default: {
+                console.warn("could not handle tag =>", param)
+              }
             }
           }
           
@@ -445,7 +468,6 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
             } else {
               parent.postMessage({cmd: 'media.load', param: {tag, src}}, "*")
             }
-
           }
         \`)
 
