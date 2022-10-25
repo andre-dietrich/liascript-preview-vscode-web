@@ -18,7 +18,8 @@
 	"activationEvents": [
 		"onCommand:liascript-preview-web.reload",
 		"onCommand:liascript-preview-web.toggle",
-		"onCommand:liascript-preview-web.toggle-jit"
+		"onCommand:liascript-preview-web.toggle-jit",
+		"onCommand:liascript-preview-web.update"
 	],
 	"browser": "./dist/web/extension.js",
 	"contributes": {
@@ -34,13 +35,17 @@
 			{
 				"command": "liascript-preview-web.toggle-jit",
 				"title": "LiaScript: Toggle Preview in JIT mode"
+			},
+			{
+				"command": "liascript-preview-web.update",
+				"title": "LiaScript: Update Preview"
 			}
 		],
 		"keybindings": [
 			{
 				"command": "liascript-preview-web.reload",
-				"key": "Ctrl+S",
-				"mac": "Ctrl+S"
+				"key": "Alt+F5",
+				"mac": "Alt+F5"
 			},
 			{
 			  	"command": "liascript-preview-web.toggle",
@@ -51,6 +56,11 @@
 				"command": "liascript-preview-web.toggle-jit",
 				"key": "alt+shift+l",
 				"mac": "alt+shift+l"
+			},
+			{
+				"command": "liascript-preview-web.update",
+				"key": "Ctrl+S",
+				"mac": "Ctrl+S"
 			}
 		  ]
 	},

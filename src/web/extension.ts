@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/semi */
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode'
@@ -5,14 +6,14 @@ import { Utils } from 'vscode-uri'
 
 const preview: {
   [key: string]: {
-    webview: vscode.WebviewPanel
+    panel: vscode.WebviewPanel
     jit: boolean
   }
 } = {}
 
 function compile(document: vscode.TextDocument) {
   if (preview[document.fileName]) {
-    preview[document.fileName].webview.webview.postMessage({
+    preview[document.fileName].panel.webview.postMessage({
       cmd: 'compile',
       param: document.getText(),
     })
@@ -37,7 +38,7 @@ vscode.workspace.onDidChangeTextDocument((event) => {
     preview[event.document.fileName] &&
     preview[event.document.fileName].jit
   ) {
-    preview[event.document.fileName].webview.webview.postMessage({
+    preview[event.document.fileName].panel.webview.postMessage({
       cmd: 'jit',
       param: event.document.getText(),
     })
@@ -51,7 +52,7 @@ vscode.languages.registerCodeActionsProvider('markdown', {
 
       if (line) {
         try {
-          preview[document.fileName].webview.webview.postMessage({
+          preview[document.fileName].panel.webview.postMessage({
             cmd: 'gotoLine',
             param: line + 1,
           })
@@ -66,7 +67,8 @@ vscode.languages.registerCodeActionsProvider('markdown', {
 function createPreview(
   jit: boolean,
   context: vscode.ExtensionContext,
-  editor?: vscode.TextEditor
+  editor?: vscode.TextEditor,
+  update: boolean = false
 ) {
   if (!editor) {
     vscode.window.showWarningMessage(
@@ -106,22 +108,24 @@ function createPreview(
     return
   }
 
-  if (preview[fileName]) {
+  if (preview[fileName] && !update) {
     // close the panel
-    preview[fileName].webview.dispose()
+    preview[fileName].panel.dispose()
     delete preview[fileName]
   } else {
     // create a new preview
-    const webviewPanel = vscode.window.createWebviewPanel(
-      'vscodeTest',
-      'LiaScript Preview: ' + fileName.slice(1),
-      vscode.ViewColumn.Beside,
-      {
-        enableScripts: true,
-        retainContextWhenHidden: true,
-        localResourceRoots: baseRoots,
-      }
-    )
+    const webviewPanel = update
+      ? preview[fileName].panel
+      : vscode.window.createWebviewPanel(
+          'vscodeTest',
+          'LiaScript Preview: ' + fileName.slice(1),
+          vscode.ViewColumn.Beside,
+          {
+            enableScripts: true,
+            retainContextWhenHidden: true,
+            localResourceRoots: baseRoots,
+          }
+        )
 
     function asWebviewUri(resource: vscode.Uri) {
       return webviewPanel.webview.asWebviewUri(resource)
@@ -147,6 +151,7 @@ function createPreview(
       (message) => {
         switch (message.cmd) {
           case 'ready': {
+            console.warn('ready ... ')
             webviewPanel.webview.postMessage({
               cmd: 'compile',
               param: editor.document.getText(),
@@ -197,8 +202,8 @@ function createPreview(
     setHtmlContent(context.extensionUri, webviewPanel.webview)
 
     preview[fileName] = {
-      webview: webviewPanel,
-      jit: jit,
+      panel: webviewPanel,
+      jit: update ? preview[fileName].jit : jit,
     }
   }
 }
@@ -217,7 +222,7 @@ export function activate(context: vscode.ExtensionContext) {
       const editor = vscode.window.activeTextEditor
 
       if (editor && preview[editor.document.fileName]) {
-        compile(editor.document)
+        createPreview(false, context, editor, true)
       }
     })
   )
@@ -237,6 +242,16 @@ export function activate(context: vscode.ExtensionContext) {
       createPreview(true, context, editor)
     })
   )
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('liascript-preview-web.update', () => {
+      const editor = vscode.window.activeTextEditor
+
+      if (editor && preview[editor.document.fileName]) {
+        compile(editor.document)
+      }
+    })
+  )
 }
 
 function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
@@ -245,6 +260,11 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
     'liascript',
     'index.html'
   )
+
+  if (webview.html) {
+    webview.html = ''
+    webview.options
+  }
 
   let htmlContent = `<!DOCTYPE html>
 	  <html lang="en">

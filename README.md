@@ -9,7 +9,7 @@ After installing press <kbd>F1</kbd> to open the fuzzy search and type "liascrip
 * __LiaScript: Toggle Preview [<kbd>Alt</kbd> <kbd>L</kbd>]__
 
   This will open a panel on the right side (or close it).
-  The preview will be updated only with manual intervention, when you select the option "Reload Preview" or hit the keyboard short-cut [<kbd>Ctrl</kbd> <kbd>S</kbd>].
+  The preview will be updated only with manual intervention, when you select the option "Update Preview" or hit the keyboard short-cut [<kbd>Ctrl</kbd> <kbd>S</kbd>] or when you completely reload the document without caching [<kbd>Alt</kbd> <kbd>F5</kbd>].
 
 * __LiaScript: Toggle Preview in JIT mode [<kbd>Shift</kbd> <kbd>Alt</kbd> <kbd>L</kbd>]__
 
@@ -17,9 +17,14 @@ After installing press <kbd>F1</kbd> to open the fuzzy search and type "liascrip
   This results in optimized update times, especially for large documents, but it also may result in glitches, when state changes of quizzes, code, etc. might be involved.
   If this happens, you simply have to reload the Preview, which will result in an entire re-interpretation of the entire document.
 
-* __LiaScript: Reload Preview [<kbd>Ctrl</kbd> <kbd>S</kbd>]__
+* __LiaScript: Update Preview [<kbd>Ctrl</kbd> <kbd>S</kbd>]__
 
-  Reload the entire document, all states are reset.
+  Reload the entire document, which is okay if you are writing Markdown, but when you import some JavaScript or CSS, then it is better to reload the entire document.
+
+* __LiaScript: Reload Preview [<kbd>Alt</kbd> <kbd>F5</kbd>]__
+
+  This will reload the entire document and all imported sources.
+  This is the best way if you are developing JavaScript or CSS, if you only write Markdown, then use the update option, which will will only compile the document.
 
 As an alternative you can also use the keyboard shortcuts directly.
 
