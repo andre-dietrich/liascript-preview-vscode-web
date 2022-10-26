@@ -120,7 +120,7 @@ function createPreview(
       ? preview[fileName].panel
       : vscode.window.createWebviewPanel(
           'vscodeTest',
-          'LiaScript Preview: ' + fileName.slice(1),
+          'LiaScript: ' + fileName.slice(1),
           vscode.ViewColumn.Beside,
           {
             enableScripts: true,
@@ -128,6 +128,11 @@ function createPreview(
             localResourceRoots: baseRoots,
           }
         )
+
+    webviewPanel.iconPath = vscode.Uri.joinPath(
+      context.extensionUri,
+      'icon.png'
+    )
 
     function asWebviewUri(resource: vscode.Uri) {
       return webviewPanel.webview.asWebviewUri(resource)

@@ -38,3 +38,7 @@ __Editor to Preview:__
 Currently not activated.
 
 
+## Text 2 Speech
+
+> Text to speech uses currently the internal browser text-to-speech engine.
+> Depending on the browser you are using, the results might differ.
