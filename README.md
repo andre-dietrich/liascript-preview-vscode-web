@@ -35,6 +35,6 @@ __Preview to Editor:__
 Double-click onto a an element within the preview and the cursor position within the editor will jump to the associated line.
 
 __Editor to Preview:__
-When you click onto an text element within the editor, the preview will switch to the associated slide.
+Currently not activated.
 
 

@@ -45,6 +45,7 @@ vscode.workspace.onDidChangeTextDocument((event) => {
   }
 })
 
+/*
 vscode.languages.registerCodeActionsProvider('markdown', {
   provideCodeActions(document, pos, tok) {
     if (preview[document.fileName]) {
@@ -63,6 +64,7 @@ vscode.languages.registerCodeActionsProvider('markdown', {
     return undefined
   },
 })
+*/
 
 function createPreview(
   jit: boolean,
