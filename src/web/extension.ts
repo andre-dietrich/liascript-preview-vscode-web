@@ -20,6 +20,15 @@ function compile(document: vscode.TextDocument) {
   }
 }
 
+function jit(document: vscode.TextDocument) {
+  if (preview[document.fileName]) {
+    preview[document.fileName].panel.webview.postMessage({
+      cmd: 'jit',
+      param: document.getText(),
+    })
+  }
+}
+
 /*
 vscode.workspace.onDidSaveTextDocument((document: vscode.TextDocument) => {
   if (document && !preview[document.fileName].jit) {
@@ -38,10 +47,7 @@ vscode.workspace.onDidChangeTextDocument((event) => {
     preview[event.document.fileName] &&
     preview[event.document.fileName].jit
   ) {
-    preview[event.document.fileName].panel.webview.postMessage({
-      cmd: 'jit',
-      param: event.document.getText(),
-    })
+    jit(event.document)
   }
 })
 
@@ -490,7 +496,7 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
 			sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-downloads"
 			allow="clipboard-read; clipboard-write;"
 			class="webview ready"
-			src="${liascriptPath}?#1"
+			src="${liascriptPath}?"
 			style="width: 100%; height: 100%; border: 0px">
 		</iframe>
 	  </body>
