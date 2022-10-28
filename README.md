@@ -2,6 +2,8 @@
 
 This is a preview module for [LiaScript](https://LiaScript.github.io) courses developed in Markdown.
 
+![Demo of the previewer](assets/demo.gif)
+
 ## Usage
 
 After installing press <kbd>F1</kbd> to open the fuzzy search and type "liascript", three options will be presented:
@@ -42,3 +44,37 @@ Currently not activated.
 
 > Text to speech uses currently the internal browser text-to-speech engine.
 > Depending on the browser you are using, the results might differ.
+
+
+## MathJS & Formula Support
+
+Put a equation between dollars and click on the hint to get some replacement options, or simply use it for fast calculations.
+
+![Formula evaluation](assets/formulas.gif)
+
+---
+
+$(12 km * 3 m)/(12 h)$
+
+$2 miles to m$
+
+$2 miles/h to km/h$
+
+You can define a dictionary after a `%` sign, which is used as a comment.
+This dictionary will then be used as a substitution for your formula.
+
+$sin(12 x) * 33 % {x:0.5}$
+
+A similar approach can also be used to check the result of some TeX formulas.
+
+$12 \cdot \frac{e}{x} % {x: 2}$
+
+---
+
+Last but not least, the following example shall demonstrate, how one formula can be presented in different ways:  
+
+$sqrt(75 / 3) + det([[-1, 2], [3, 1]]) - sin(pi / 4)^2$
+
+$sqrt(75 / 3) + det([[-1, 2], [3, 1]]) - sin(pi / 4)^2$
+
+$sqrt(75 / 3) + det([[-1, 2], [3, 1]]) - sin(pi / 4)^2$

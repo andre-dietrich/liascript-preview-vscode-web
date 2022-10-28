@@ -3,7 +3,8 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode'
 import { Utils } from 'vscode-uri'
-import { evaluate, format, parse, simplify } from 'mathjs'
+import * as MATHJS from 'mathjs'
+import * as MathParser from 'tex-math-parser' // ES6 module
 
 const COMMAND = 'code-actions-mathjs.command'
 
@@ -109,6 +110,14 @@ function filterParenRanges(
   })
 }
 
+function tryOut(fn: () => any) {
+  try {
+    return fn()
+  } catch (e) {
+    return ''
+  }
+}
+
 class Mathjizer implements vscode.CodeActionProvider {
   public static readonly providedCodeActionKinds = [
     vscode.CodeActionKind.RefactorInline,
@@ -124,32 +133,37 @@ class Mathjizer implements vscode.CodeActionProvider {
       return
     }
 
-    const replaceWith = this.createFix(
-      document,
-      result.range,
-      'Replace by evaluation',
-      result.result
-    )
+    const replace = []
 
-    const replaceWithLatex = this.createFix(
-      document,
-      result.range,
-      'Replace by TeX',
-      '$' + result.latex + '$'
-    )
+    if (result.result) {
+      replace.push(
+        this.createFix(document, result.range, 'Evaluates to', result.result)
+      )
+    }
 
-    const replaceWithLatex2 = this.createFix(
-      document,
-      result.range,
-      'Replace by simplified TeX',
-      '$' + result.simplify + '$'
-    )
+    if (result.latex && result.result !== result.latex) {
+      replace.push(
+        this.createFix(document, result.range, 'Replace by TeX', result.latex)
+      )
+    }
 
-    replaceWith.isPreferred = true
+    if (
+      result.simplify &&
+      (result.latex != result.simplify || result.result != result.simplify)
+    ) {
+      replace.push(
+        this.createFix(
+          document,
+          result.range,
+          'Simplified TeX',
+          result.simplify
+        )
+      )
+    }
 
-    const commandAction = this.createCommand()
+    replace.push(this.createCommand())
 
-    return [replaceWith, replaceWithLatex, replaceWithLatex2, commandAction]
+    return replace
   }
 
   private isAtStartOfSmiley(
@@ -164,31 +178,65 @@ class Mathjizer implements vscode.CodeActionProvider {
   } {
     const line = document.lineAt(range.start.line)
 
-    let parenRanges = findParenRanges(line.text)
-    let filteredParenRanges = filterParenRanges(
-      parenRanges,
-      line.text,
-      range.start.character
-    )
+    let reg = /\$[^\$]+\$/g
 
-    if (filteredParenRanges) {
-      const position = filteredParenRanges[0]
-      let expression = line.text.substring(position[0] + 1, position[1])
+    let match
+    while ((match = reg.exec(line.text))) {
+      if (
+        match.index !== undefined &&
+        range.start.character >= match.index &&
+        range.start.character <= match.index + match[0].length
+      ) {
+        let [expression, json] = match[0].slice(1, -1).split('%')
+        let scope = {}
+        expression = expression.trim()
 
-      try {
-        return {
-          result: format(evaluate(expression)),
-          latex: parse(expression).toTex(),
-          simplify: simplify(expression).toTex(),
-
-          range: new vscode.Range(
-            range.start.line,
-            position[0],
-            range.start.line,
-            position[1] + 1
-          ),
+        if (json) {
+          try {
+            scope = eval('Object(' + json + ')') || {}
+          } catch (e) {}
         }
-      } catch (e) {}
+
+        try {
+          MATHJS.parse(expression)
+          return {
+            result: tryOut(() =>
+              MATHJS.format(MATHJS.evaluate(expression, scope))
+            ),
+            latex: tryOut(() => MATHJS.parse(expression).toTex()),
+            simplify: tryOut(() => MATHJS.simplify(expression, scope).toTex()),
+
+            range: new vscode.Range(
+              range.start.line,
+              match.index + 1,
+              range.start.line,
+              match.index + match[0].length - 1
+            ),
+          }
+        } catch (e) {}
+
+        try {
+          let math = MathParser.parseTex(expression)
+
+          return {
+            result: tryOut(
+              () => MathParser.evaluateTex(expression, scope)['evaluated']
+            ),
+            latex: '', //MATHJS.parse(expression).toTex(),
+            // @ts-ignore
+            simplify: tryOut(() => MATHJS.simplify(math).toTex()),
+
+            range: new vscode.Range(
+              range.start.line,
+              match.index + 1,
+              range.start.line,
+              match.index + match[0].length - 1
+            ),
+          }
+        } catch (e) {}
+
+        return null
+      }
     }
 
     return null
@@ -389,15 +437,17 @@ export function activate(context: vscode.ExtensionContext) {
     })
   )
 
+  context.subscriptions.push(
+    vscode.commands.registerCommand(COMMAND, () =>
+      vscode.env.openExternal(
+        vscode.Uri.parse('https://mathjs.org/docs/expressions/syntax.html')
+      )
+    )
+  )
+
   /*
   mathDiagnostics = vscode.languages.createDiagnosticCollection('math')
   context.subscriptions.push(mathDiagnostics)
-
-  context.subscriptions.push(
-    vscode.commands.registerCommand(COMMAND, () =>
-      vscode.env.openExternal(vscode.Uri.parse('https://mathjs.org/index.html'))
-    )
-  )
 
   context.subscriptions.push(
     vscode.languages.registerCodeActionsProvider('markdown', new Mathinfo(), {
