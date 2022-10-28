@@ -48,9 +48,9 @@
 				"mac": "Alt+F5"
 			},
 			{
-			  	"command": "liascript-preview-web.toggle",
-			  	"key": "alt+l",
-			  	"mac": "alt+l"
+				"command": "liascript-preview-web.toggle",
+				"key": "alt+l",
+				"mac": "alt+l"
 			},
 			{
 				"command": "liascript-preview-web.toggle-jit",
@@ -62,7 +62,7 @@
 				"key": "Ctrl+S",
 				"mac": "Ctrl+S"
 			}
-		  ]
+		]
 	},
 	"scripts": {
 		"test": "vscode-test-web --browserType=chromium --extensionDevelopmentPath=. --extensionTestsPath=dist/web/test/suite/index.js",
@@ -91,6 +91,7 @@
 		"webpack-cli": "^4.9.2"
 	},
 	"dependencies": {
-		"@liascript/editor": "^1.1.0--0.10.22"
+		"@liascript/editor": "^1.1.0--0.10.22",
+		"mathjs": "^11.3.2"
 	}
 }

@@ -3,6 +3,9 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode'
 import { Utils } from 'vscode-uri'
+import { evaluate, format, parse, simplify } from 'mathjs'
+
+const COMMAND = 'code-actions-mathjs.command'
 
 const preview: {
   [key: string]: {
@@ -71,6 +74,154 @@ vscode.languages.registerCodeActionsProvider('markdown', {
   },
 })
 */
+
+function findParenRanges(lineText: string) {
+  let parenRanges = []
+  let openParenIndexes = []
+  for (let i = 0; i < lineText.length; i++) {
+    let char = lineText.charAt(i)
+    if (char === '(') {
+      openParenIndexes.push(i)
+    } else if (char === ')') {
+      let openParenIndex = openParenIndexes.pop()
+      if (openParenIndex !== undefined) {
+        parenRanges.unshift([openParenIndex, i])
+      }
+    }
+  }
+  return parenRanges
+}
+
+function filterParenRanges(
+  parenRanges: any,
+  lineText: string,
+  bufferColumn: number
+): number[][] {
+  return parenRanges.filter((range: [number, number]) => {
+    // empty parens aren't worth showing suggestions for
+    let innerText = lineText.substring(range[0] + 1, range[1]) // skip open paren
+    let isNotTrivial = /[^()]/.test(innerText)
+
+    // check if cursor is within or immediately after paren range
+    let isCursorWithin = bufferColumn > range[0] && bufferColumn <= range[1] + 1
+
+    return isNotTrivial && isCursorWithin
+  })
+}
+
+class Mathjizer implements vscode.CodeActionProvider {
+  public static readonly providedCodeActionKinds = [
+    vscode.CodeActionKind.RefactorInline,
+  ]
+
+  public provideCodeActions(
+    document: vscode.TextDocument,
+    range: vscode.Range
+  ): vscode.CodeAction[] | undefined {
+    const result = this.isAtStartOfSmiley(document, range)
+
+    if (result === null) {
+      return
+    }
+
+    const replaceWith = this.createFix(
+      document,
+      result.range,
+      'Replace by evaluation',
+      result.result
+    )
+
+    const replaceWithLatex = this.createFix(
+      document,
+      result.range,
+      'Replace by TeX',
+      '$' + result.latex + '$'
+    )
+
+    const replaceWithLatex2 = this.createFix(
+      document,
+      result.range,
+      'Replace by simplified TeX',
+      '$' + result.simplify + '$'
+    )
+
+    replaceWith.isPreferred = true
+
+    const commandAction = this.createCommand()
+
+    return [replaceWith, replaceWithLatex, replaceWithLatex2, commandAction]
+  }
+
+  private isAtStartOfSmiley(
+    document: vscode.TextDocument,
+    range: vscode.Range
+  ): null | {
+    result: string
+    latex: string
+    simplify: string
+
+    range: vscode.Range
+  } {
+    const line = document.lineAt(range.start.line)
+
+    let parenRanges = findParenRanges(line.text)
+    let filteredParenRanges = filterParenRanges(
+      parenRanges,
+      line.text,
+      range.start.character
+    )
+
+    if (filteredParenRanges) {
+      const position = filteredParenRanges[0]
+      let expression = line.text.substring(position[0] + 1, position[1])
+
+      try {
+        return {
+          result: format(evaluate(expression)),
+          latex: parse(expression).toTex(),
+          simplify: simplify(expression).toTex(),
+
+          range: new vscode.Range(
+            range.start.line,
+            position[0],
+            range.start.line,
+            position[1] + 1
+          ),
+        }
+      } catch (e) {}
+    }
+
+    return null
+  }
+
+  private createFix(
+    document: vscode.TextDocument,
+    range: vscode.Range,
+    comment: string,
+    replace: string
+  ): vscode.CodeAction {
+    const fix = new vscode.CodeAction(
+      comment + ': ' + replace,
+      vscode.CodeActionKind.QuickFix
+    )
+    fix.edit = new vscode.WorkspaceEdit()
+    fix.edit.replace(document.uri, range, replace)
+    return fix
+  }
+
+  private createCommand(): vscode.CodeAction {
+    const action = new vscode.CodeAction(
+      'Learn more about MathJS',
+      vscode.CodeActionKind.Empty
+    )
+    action.command = {
+      command: COMMAND,
+      title: 'Learn more about MathJS',
+      tooltip: 'This will open the MathJS page.',
+    }
+    return action
+  }
+}
 
 function createPreview(
   jit: boolean,
@@ -231,6 +382,28 @@ export function activate(context: vscode.ExtensionContext) {
   console.log(
     'Congratulations, your extension "liascript-preview-web" is now active!'
   )
+
+  context.subscriptions.push(
+    vscode.languages.registerCodeActionsProvider('markdown', new Mathjizer(), {
+      providedCodeActionKinds: Mathjizer.providedCodeActionKinds,
+    })
+  )
+
+  /*
+  mathDiagnostics = vscode.languages.createDiagnosticCollection('math')
+  context.subscriptions.push(mathDiagnostics)
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(COMMAND, () =>
+      vscode.env.openExternal(vscode.Uri.parse('https://mathjs.org/index.html'))
+    )
+  )
+
+  context.subscriptions.push(
+    vscode.languages.registerCodeActionsProvider('markdown', new Mathinfo(), {
+      providedCodeActionKinds: Mathinfo.providedCodeActionKinds,
+    })
+  )*/
 
   context.subscriptions.push(
     vscode.commands.registerCommand('liascript-preview-web.reload', () => {
