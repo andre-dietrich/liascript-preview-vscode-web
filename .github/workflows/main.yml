@@ -8,6 +8,10 @@ jobs:
     steps:
       - name: Download plugin
         uses: actions/download-artifact@v2
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-project:
     name: Build liascript-preview-web plugin
