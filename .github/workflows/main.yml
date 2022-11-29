@@ -8,8 +8,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Install NPM dependencies
-        uses: npm install
+        run: npm install
       - name: Install vsce
-        uses: npm install -g vsce
+        run: npm install -g vsce
       - name: Build plugin
-        uses: vsce package
+        run: vsce package
