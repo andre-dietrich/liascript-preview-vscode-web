@@ -1,0 +1,15 @@
+name: Build & release liascript-preview-web plugin
+on: push
+jobs:
+  build-project:
+    name: Build liascript-preview-web plugin
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Install NPM dependencies
+        uses: npm install
+      - name: Install vsce
+        uses: npm install -g vsce
+      - name: Build plugin
+        uses: vsce package
