@@ -13,3 +13,7 @@ jobs:
         run: npm install -g vsce
       - name: Build plugin
         run: vsce package
+      - name: Upload static content
+        uses: actions/upload-artifact@v2
+        with:
+          path: *.vsix
