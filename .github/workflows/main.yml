@@ -1,17 +1,30 @@
 name: Build & release liascript-preview-web plugin
-on: push
+on:
+  push:
+    tags:    # Sequence of patterns matched against refs/tags
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 jobs:
   release-project:
     name: Release liascript-preview-web plugin
     runs-on: ubuntu-latest
     needs: build-project
     steps:
-      - name: Download plugin
-        uses: actions/download-artifact@v2
-      - name: Create GitHub Release
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Create Release
+        id: create_release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            Changes in this Release
+            - First Change
+            - Second Change
+          draft: false
+          prerelease: false
 
   build-project:
     name: Build liascript-preview-web plugin
