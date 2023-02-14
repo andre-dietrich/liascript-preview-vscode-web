@@ -8,12 +8,12 @@ This is a preview module for [LiaScript](https://LiaScript.github.io) courses de
 
 After installing press <kbd>F1</kbd> to open the fuzzy search and type "liascript", three options will be presented:
 
-* __LiaScript: Toggle Preview [<kbd>Alt</kbd> <kbd>L</kbd>]__
+* __LiaScript: Toggle Preview [<kbd>Alt</kbd> <kbd>L</kbd>] - (on Mac [<kbd>Cmd</kbd> <kbd>L</kbd>])__
 
   This will open a panel on the right side (or close it).
   The preview will be updated only with manual intervention, when you select the option "Update Preview" or hit the keyboard short-cut [<kbd>Ctrl</kbd> <kbd>S</kbd>] or when you completely reload the document without caching [<kbd>Alt</kbd> <kbd>F5</kbd>].
 
-* __LiaScript: Toggle Preview in JIT mode [<kbd>Shift</kbd> <kbd>Alt</kbd> <kbd>L</kbd>]__
+* __LiaScript: Toggle Preview in JIT mode [<kbd>Shift</kbd> <kbd>Alt</kbd> <kbd>L</kbd>] - (on Mac [<kbd>Shift</kbd> <kbd>Cmd</kbd> <kbd>L</kbd>])__
 
   The difference between this and the upper mode is, that with this option a faster update mode (Just-In-Time compilation) will be used, which will only compile the differences between the current and the previous version.
   This results in optimized update times, especially for large documents, but it also may result in glitches, when state changes of quizzes, code, etc. might be involved.

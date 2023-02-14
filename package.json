@@ -50,12 +50,12 @@
 			{
 				"command": "liascript-preview-web.toggle",
 				"key": "alt+l",
-				"mac": "alt+l"
+				"mac": "cmd+l"
 			},
 			{
 				"command": "liascript-preview-web.toggle-jit",
 				"key": "alt+shift+l",
-				"mac": "alt+shift+l"
+				"mac": "cmd+shift+l"
 			},
 			{
 				"command": "liascript-preview-web.update",
