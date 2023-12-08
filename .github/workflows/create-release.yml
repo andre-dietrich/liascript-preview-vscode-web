@@ -1,0 +1,47 @@
+on:
+  push:
+    tags: 
+      - "*"
+
+name: Create Release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract Tag Number
+        id: tag
+        run: echo "::set-output name=tag_number::$(echo ${{ github.ref }} | sed -e 's/refs\/tags\///g')"
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - name: Building Package
+        run: |
+          npm install -g vsce
+          npm install -g tsc
+          npm install
+          npm run pack
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            Download the liascript-preview below ...
+          draft: false
+          prerelease: false
+      - name: Upload Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./liascript-preview-web-${{ steps.tag.outputs.tag_number }}.vsix
+          asset_name: liascript-preview-web-${{ steps.tag.outputs.tag_number }}.vsix
+          asset_content_type: application/zip
