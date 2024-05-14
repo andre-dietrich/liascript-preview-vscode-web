@@ -6,11 +6,12 @@ node_modules/**
 .gitignore
 vsc-extension-quickstart.md
 webpack.config.js
+esbuild.js
 .yarnrc
 **/tsconfig.json
 **/.eslintrc.json
 **/*.map
 **/*.ts
-.gitignore
+**/.vscode-test.*
 *.vsix
 assets/**

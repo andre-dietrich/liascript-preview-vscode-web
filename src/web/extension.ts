@@ -149,7 +149,7 @@ class Mathjizer implements vscode.CodeActionProvider {
 
     if (
       result.simplify &&
-      (result.latex != result.simplify || result.result != result.simplify)
+      (result.latex !== result.simplify || result.result !== result.simplify)
     ) {
       replace.push(
         this.createFix(
@@ -291,7 +291,10 @@ function createPreview(
     'index.html'
   )
 
-  const baseRoots: vscode.Uri[] = []
+  const baseRoots: vscode.Uri[] = [
+    vscode.Uri.joinPath(context.extensionUri, 'liascript'),
+  ]
+
   const folder = vscode.workspace.getWorkspaceFolder(editor.document.uri)
   if (folder) {
     const workspaceRoots = vscode.workspace.workspaceFolders?.map(
@@ -324,7 +327,7 @@ function createPreview(
     const webviewPanel = update
       ? preview[fileName].panel
       : vscode.window.createWebviewPanel(
-          'vscodeTest',
+          'liascript',
           'LiaScript: ' + fileName.slice(1),
           vscode.ViewColumn.Beside,
           {
@@ -505,39 +508,39 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
   }
 
   let htmlContent = `<!DOCTYPE html>
-	  <html lang="en">
-	  <head>
-		<meta charset="UTF-8">
-	
-		<title>LiaScript - Preview</title>
-		
-		<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-		
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
 
-		<script>
-		const vscode = acquireVsCodeApi();
+        <title>LiaScript - Preview</title>
 
-    vscode
+        <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+        <meta http-equiv="Cross-Origin-Embedder-Policy" content="credentialless" />
 
-		var lia;
+        <script>
+        const vscode = acquireVsCodeApi();
 
-		function sendToLia(cmd, param) {
-			if (lia) {
-				lia.postMessage({cmd, param}, "*")
-			}
-			else {
-				init()
-			}
-		}
+        vscode
 
-		window.addEventListener("message", (event) => {
-			switch (event.data.cmd) {
-				case "jit":
-					sendToLia("jit", event.data.param)
-					break
-				case "compile":
-					sendToLia("compile", event.data.param)
-					break
+        var lia;
+
+        function sendToLia(cmd, param) {
+      if (lia) {
+        lia.postMessage({cmd, param}, "*")
+      }
+      else {
+        init()
+      }
+    }
+
+    window.addEventListener("message", (event) => {
+      switch (event.data.cmd) {
+        case "jit":
+          sendToLia("jit", event.data.param)
+          break
+        case "compile":
+          sendToLia("compile", event.data.param)
+          break
         case "lineGoto":
           publish("lineGoto", event.data.param)
           break
@@ -562,24 +565,24 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
             .then((blob) => { sendToLia("inject", {tag: event.data.param.tag, src: event.data.param.origin, data: blob}) })
             .catch((e) => { console.warn("loading content failed", e) })
           break
-				default:
+        default:
           console.warn("unknown command:", event.data)
-					break
-			}
-		  }, false);
-	
-		function publish(cmd, param) {
-		  // Call back to the extension context to save the image to the workspace folder.
-		  vscode.postMessage({ cmd, param });
-		}
-	
-		function init() {
-		  const iframe = document.getElementById("lia")
-		  
-		  if (iframe) {
-			  lia = iframe.contentWindow || iframe.contentDocument;
+          break
+      }
+    }, false);
 
-			  sendToLia("eval", \`
+    function publish(cmd, param) {
+      // Call back to the extension context to save the image to the workspace folder.
+      vscode.postMessage({ cmd, param });
+    }
+
+    function init() {
+      const iframe = document.getElementById("lia")
+
+      if (iframe) {
+        lia = iframe.contentWindow || iframe.contentDocument;
+
+        sendToLia("eval", \`
           var blob = {};
 
           window.LIA.lineGoto = (line) => {
@@ -601,40 +604,39 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
             }
 
             const src = window.location.origin + param.src
-          
+
             switch (param.tag) {
               case "img": {
                 const images = document.querySelectorAll('img,picture')
-          
+
                 for (let i = 0; i < images.length; i++) {
                   let image = images[i]
-          
+
                   if (image.src == src) {
                     image.src = url
-          
+
                     if (image.onclick) {
                       image.onclick = function () {
                         window.LIA.img.click(url)
                       }
                     }
-                    
+
                     break
                   }
                 }
-          
+
                 break
               }
-            
-          
+
               case "audio": {
                 const nodes = document.querySelectorAll('source')
-          
+
                 for (let i = 0; i < nodes.length; i++) {
                   let elem = nodes[i]
                   if (elem.src == src) {
                     elem.src = url
                     elem.removeAttribute("onerror")
-                    
+
                     const parent = elem.parentNode
                     // this forces the player to reload
                     parent.innerHTML = elem.outerHTML
@@ -643,15 +645,15 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
                     break
                   }
                 }
-          
+
                 break
               }
-          
+
               case "video": {
                 const nodes = document.querySelectorAll('source')
                 for (let i = 0; i < nodes.length; i++) {
                   let elem = nodes[i]
-                  if (elem.src == src) {                  
+                  if (elem.src == src) {
                     const parent = elem.parentNode
                     parent.src = url
                     parent.load()
@@ -661,7 +663,7 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
                     break
                   }
                 }
-          
+
                 break
               }
 
@@ -669,7 +671,7 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
                 const tag = document.createElement('script')
                 tag.src = url
                 document.head.appendChild(tag)
-                
+
                 break
               }
 
@@ -678,7 +680,7 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
                 tag.href = url
                 tag.rel = 'stylesheet'
                 document.head.appendChild(tag)
-                
+
                 break
               }
 
@@ -687,8 +689,8 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
               }
             }
           }
-          
-            
+
+
           document.body.onclick = (e) => {
             e = e.srcElement || e.target;
             const parentNode = e.parentNode
@@ -707,23 +709,23 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
           }
         \`)
 
-			  publish("ready", true)
-		  }
-		}
-	
-		</script>
-	  </head>
-	  <body style="padding: 0px; height: 100vh; overflow: hidden; width: 100%">
-		<iframe
-			id="lia"
-			sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-downloads"
-			allow="clipboard-read; clipboard-write;"
-			class="webview ready"
-			src="${liascriptPath}?"
-			style="width: 100%; height: 100%; border: 0px">
-		</iframe>
-	  </body>
-	  </html>`
+        publish("ready", true)
+      }
+    }
+
+    </script>
+    </head>
+    <body style="padding: 0px; height: 100vh; overflow: hidden; width: 100%">
+    <iframe
+      id="lia"
+      sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-downloads"
+      allow="clipboard-read; clipboard-write;"
+      class="webview ready"
+      src="${webview.asWebviewUri(liascriptPath)}?vscode-coi=3"
+      style="width: 100%; height: 100%; border: 0px">
+    </iframe>
+    </body>
+    </html>`
 
   webview.html = htmlContent
 }
