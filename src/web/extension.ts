@@ -365,6 +365,9 @@ function createPreview(
 
       webviewPanel.webview.onDidReceiveMessage(
         (message) => {
+          // output a message to the console
+          console.warn('liascript-preview-web: received message ->', message)
+
           switch (message.cmd) {
             case 'ready': {
               console.warn('ready ... ')
@@ -389,6 +392,7 @@ function createPreview(
                   origin: message.param.src,
                 },
               })
+
               break
             }
             case 'eval': {
@@ -515,8 +519,10 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
         <title>LiaScript - Preview</title>
 
         <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
-        <meta http-equiv="Cross-Origin-Embedder-Policy" content="credentialless" />
-
+        <meta http-equiv="Access-Control-Allow-Origin" content="*" />
+        <meta http-equiv="Cross-Origin-Opener-Policy" content="cross-origin">
+        <!-- Set Content Security Policy to allow resources from trusted sources -->
+        <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' blob:; img-src * https://www.hackerspace-ffm.de data: blob:; frame-src * https://www.youtube-nocookie.com blob:; script-src * 'unsafe-inline' 'unsafe-eval' blob:; style-src * 'unsafe-inline' blob:;">
         <script>
         const vscode = acquireVsCodeApi();
 
@@ -534,6 +540,7 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
     }
 
     window.addEventListener("message", (event) => {
+      console.warn("XXXXXXXXXXXXXXXXXXx received message =>", event.data)
       switch (event.data.cmd) {
         case "jit":
           sendToLia("jit", event.data.param)
@@ -701,10 +708,35 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
           }
 
           window.LIA.fetchError = (tag, src) => {
+            console.warn("XXXXXXXXXXXXXXfetch error", tag, src)
             if (blob[src]) {
               window.injectHandler({tag, src})
             } else {
-              parent.postMessage({cmd: 'media.load', param: {tag, src}}, "*")
+              if ( src.startsWith('http://') || src.startsWith('https://')) {
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', src, true);
+                xhr.responseType = 'blob';
+                
+                console.log('XXXXXXXXXXXXXXx Image fetching:', src);
+                xhr.onload = () => {
+                    if (xhr.status === 200) {
+                      const data = xhr.response;
+                      window.injectHandler({tag, src, data})
+                    } else {
+                        console.error('Error fetching image:', xhr.statusText);
+                    }
+                };
+
+                xhr.onerror = () => {
+                    console.error('Network error occurred.');
+                };
+
+                xhr.withCredentials = false;
+
+                xhr.send();
+              } else {
+                parent.postMessage({cmd: 'media.load', param: {tag, src}}, "*")
+              }
             }
           }
         \`)
@@ -719,10 +751,12 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
     <iframe
       id="lia"
       sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-downloads"
-      allow="clipboard-read; clipboard-write;"
+      allow="clipboard-read; clipboard-write; cross-origin-isolated; autoplay; fullscreen; geolocation; microphone; midi; vr;"
       class="webview ready"
-      src="${webview.asWebviewUri(liascriptPath)}?vscode-coi=3"
-      style="width: 100%; height: 100%; border: 0px">
+      src="${webview.asWebviewUri(
+        liascriptPath
+      )}?vscode-coi=3&extensionId=vscode.markdown-language-features&platform=browser&vscode-resource-base-authority=vscode-resource.vscode-cdn.net"
+      style="width: 100%; height: 100%; border: 0px; pointer-events: auto;">
     </iframe>
     </body>
     </html>`
