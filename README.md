@@ -4,10 +4,6 @@ This is a preview module for [LiaScript](https://LiaScript.github.io) courses de
 
 ![Demo of the previewer](assets/demo.gif)
 
-![test](https://www.hackerspace-ffm.de/wiki/images/Test-sign_640.png)
-
-<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/H4zckOOf4rA?si=IIpEEY_0nZwpb8V-" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-
 ## Usage
 
 After installing press <kbd>F1</kbd> to open the fuzzy search and type "liascript", three options will be presented:

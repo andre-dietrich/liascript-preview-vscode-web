@@ -366,7 +366,7 @@ function createPreview(
       webviewPanel.webview.onDidReceiveMessage(
         (message) => {
           // output a message to the console
-          console.warn('liascript-preview-web: received message ->', message)
+          // console.warn('liascript-preview-web: received message ->', message)
 
           switch (message.cmd) {
             case 'ready': {
@@ -540,7 +540,6 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
     }
 
     window.addEventListener("message", (event) => {
-      console.warn("XXXXXXXXXXXXXXXXXXx received message =>", event.data)
       switch (event.data.cmd) {
         case "jit":
           sendToLia("jit", event.data.param)
@@ -708,7 +707,6 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
           }
 
           window.LIA.fetchError = (tag, src) => {
-            console.warn("XXXXXXXXXXXXXXfetch error", tag, src)
             if (blob[src]) {
               window.injectHandler({tag, src})
             } else {
@@ -716,8 +714,7 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
                 const xhr = new XMLHttpRequest();
                 xhr.open('GET', src, true);
                 xhr.responseType = 'blob';
-                
-                console.log('XXXXXXXXXXXXXXx Image fetching:', src);
+
                 xhr.onload = () => {
                     if (xhr.status === 200) {
                       const data = xhr.response;
