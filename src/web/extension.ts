@@ -656,7 +656,7 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
               }
 
               case "video": {
-                const nodes = document.querySelectorAll('source')
+                let nodes = document.querySelectorAll('source')
                 for (let i = 0; i < nodes.length; i++) {
                   let elem = nodes[i]
                   if (elem.src == src) {
@@ -667,6 +667,19 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
                       parent.play()
                     }
                     break
+                  }
+                }
+
+                nodes = document.querySelectorAll('video')
+                for (let i = 0; i < nodes.length; i++) {
+                  let elem = nodes[i]
+
+                  if (elem.src == src) {
+                    elem.src = url
+                    elem.load()
+                    elem.onloadeddata = function() {
+                      elem.play()
+                    }
                   }
                 }
 
