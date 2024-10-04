@@ -1,27 +1,39 @@
-# Quiz
+<!--
 
-- `(13 % 3) * 2` ergibt [[0|1|(2)|4]] und ist vom Typ [[(int)|float]]
+@style
 
-asdfafds
+.katex {
+    color: pink;
+    font-size: 2.5em;
+}
 
+h1 {
+    color: pink;
+}
 
+@end
 
-asfdasfd
-
-
-asfdasfd
-
-asfdasfd
-
-
-asdfasfdafd
-
+-->
 
 
-asfdasfd
+# Test
+
+<!-- data-sortable="false" -->
+| Header 1 | <!-- data-sortable="true" --> Header 2 |
+| :------- | :------------------------------------- |
+| Item 1   | Item 2                                 |
+| Item 5   | Item 6                                 |
+| Item 9   | Item 10                                |
+| Item 13  | Item 14                                |
 
 
-asdfasfdafd
+This is text with some inline math like $2$ and $f=2x+87$ and this: $230$.
+
+# Test
+
+This is text with some inline math like $2$ and $f=2x+87$ and this: $230$.
 
 
-asfdafs
+# Test
+
+This is text with some inline math like $2$ and $f=2x+87$ and this: $230$.
