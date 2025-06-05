@@ -16,3 +16,4 @@ esbuild.js
 **/.vscode-test.*
 *.vsix
 assets/**
+test/**
