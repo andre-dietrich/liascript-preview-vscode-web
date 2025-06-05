@@ -309,6 +309,7 @@ function createPreview(
 
   const fileName = editor.document.fileName
   const fileEnding = fileName.split('.').slice(-1)[0]?.toLowerCase()
+  const baseFolder = Utils.dirname(editor!.document.uri)
 
   if (fileEnding !== 'md') {
     vscode.window.showWarningMessage(
@@ -347,15 +348,19 @@ function createPreview(
     }
 
     function transformSrc(src: string) {
-      let ret = ''
-      let uri = vscode.Uri.parse('markdown-link:' + src)
-      if (folder) {
-        uri = vscode.Uri.joinPath(folder.uri, uri.fsPath)
-        ret = asWebviewUri(uri).toString(true)
-      } else {
-        ret = uri.toString(true).replace(/^markdown-link:/, '')
-      }
-      return ret
+      // 2) figure out the base URI (either the workspace-folder or the file’s own folder)
+      const baseUri = folder
+        ? folder.uri
+        : vscode.Uri.file(editor!.document.uri.fsPath)
+
+      // 3) split the incoming path into segments (["..","..","logo.jpg"])
+      const segments = src.split('/').filter((s) => s !== '' && s !== '.')
+
+      // 4) pass each segment to joinPath → it will normalize “..” for you
+      const target = vscode.Uri.joinPath(baseUri, ...segments)
+
+      // 5) finally wrap in a webview URI
+      return webviewPanel.webview.asWebviewUri(target).toString(true)
     }
 
     if (!update) {
@@ -609,7 +614,7 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
               return
             }
 
-            const src = window.location.origin + param.src
+            const src = param.src
 
             switch (param.tag) {
               case "img": {
@@ -617,8 +622,8 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
 
                 for (let i = 0; i < images.length; i++) {
                   let image = images[i]
-
-                  if (image.src == src) {
+                  
+                  if (image.getAttribute("src") === src) {
                     image.src = url
 
                     if (image.onclick) {
@@ -639,7 +644,7 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
 
                 for (let i = 0; i < nodes.length; i++) {
                   let elem = nodes[i]
-                  if (elem.src == src) {
+                  if (elem.getAttribute("src") === src) {
                     elem.src = url
                     elem.removeAttribute("onerror")
 
@@ -659,7 +664,7 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
                 let nodes = document.querySelectorAll('source')
                 for (let i = 0; i < nodes.length; i++) {
                   let elem = nodes[i]
-                  if (elem.src == src) {
+                  if (elem.getAttribute("src") === src) {
                     const parent = elem.parentNode
                     parent.src = url
                     parent.load()
@@ -674,7 +679,7 @@ function setHtmlContent(extensionUri: vscode.Uri, webview: vscode.Webview) {
                 for (let i = 0; i < nodes.length; i++) {
                   let elem = nodes[i]
 
-                  if (elem.src == src) {
+                  if (elem.getAttribute("src") === src) {
                     elem.src = url
                     elem.load()
                     elem.onloadeddata = function() {
