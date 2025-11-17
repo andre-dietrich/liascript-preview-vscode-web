@@ -8,12 +8,22 @@
     "url": "https://github.com/andre-dietrich/liascript-preview-vscode-web.git"
   },
   "icon": "icon.png",
-  "version": "0.2.83",
+  "version": "0.2.84",
   "engines": {
     "vscode": "^1.89.0"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Tools",
+    "Programming Languages"
+  ],
+  "tags": [
+    "liascript",
+    "markdown",
+    "preview",
+    "education",
+    "e-learning",
+    "oer"
   ],
   "activationEvents": [
     "onCommand:liascript-preview-web.reload",
