@@ -8,9 +8,9 @@
     "url": "https://github.com/andre-dietrich/liascript-preview-vscode-web.git"
   },
   "icon": "icon.png",
-  "version": "0.2.84",
+  "version": "0.2.85",
   "engines": {
-    "vscode": "^1.90.0"
+    "vscode": "^1.89.0"
   },
   "categories": [
     "Other",
