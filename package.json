@@ -87,7 +87,7 @@
   "devDependencies": {
     "@types/assert": "^1.5.11",
     "@types/mocha": "^10.0.10",
-    "@types/vscode": "^1.89.0",
+    "@types/vscode": "^1.109.0",
     "@types/webpack-env": "^1.18.8",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
@@ -96,13 +96,13 @@
     "eslint": "^8.57.1",
     "mocha": "^10.4.0",
     "process": "^0.11.10",
-    "ts-loader": "^9.5.2",
-    "typescript": "^5.8.3",
-    "webpack": "^5.99.9",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.9.3",
+    "webpack": "^5.105.2",
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
     "mathjs": "^11.3.2",
-    "tex-math-parser": "^2.0.3"
+    "tex-math-parser": "^2.0.5"
   }
 }
