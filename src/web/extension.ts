@@ -348,10 +348,9 @@ function createPreview(
     }
 
     function transformSrc(src: string) {
-      // 2) figure out the base URI (either the workspace-folder or the file’s own folder)
-      const baseUri = folder
-        ? folder.uri
-        : vscode.Uri.file(editor!.document.uri.fsPath)
+      // 2) resolve relative to the document's own directory, so that paths like
+      //    ../../img/foo.jpg work correctly regardless of workspace root
+      const baseUri = baseFolder
 
       // 3) split the incoming path into segments (["..","..","logo.jpg"])
       const segments = src.split('/').filter((s) => s !== '' && s !== '.')
